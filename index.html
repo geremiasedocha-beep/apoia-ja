@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="pt-AO">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apoio Já — Conectando o Futuro de Angola</title>
+    <meta name="robots" content="noindex">
+    <meta name="description" content="Plataforma de apoio à aprendizagem alinhada ao currículo angolano. Encontre explicadores voluntários e acessíveis.">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0B2545',
+                        secondary: '#134074',
+                        accent: '#F28C28',
+                        accentHover: '#D97720',
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'Plus Jakarta Sans', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts (Space Grotesk - estético e moderno estilo Code Fast) -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .dark .glass-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(51, 65, 85, 0.8); }
+        .hero-glow { background: radial-gradient(circle at 50% 20%, rgba(242, 140, 40, 0.15) 0%, rgba(11, 37, 69, 0.04) 60%, transparent 100%); }
+        .dark .hero-glow { background: radial-gradient(circle at 50% 20%, rgba(242, 140, 40, 0.1) 0%, rgba(15, 23, 42, 0.05) 60%, transparent 100%); }
+    </style>
+</head>
+<body class="antialiased transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const NIVEIS_ENSINO = [
+            "Ensino Primário (1.ª–6.ª classe)",
+            "I Ciclo do Ensino Secundário (7.ª–9.ª)",
+            "II Ciclo do Ensino Secundário (10.ª–12.ª/13.ª, Técnico-Profissional)"
+        ];
+
+        const DISCIPLINAS = [
+            "Língua Portuguesa", "Matemática", "Física", "Química", 
+            "Biologia", "História", "Geografia", "Inglês", "Informática", "Filosofia"
+        ];
+
+        const PROVINCIAS = [
+            "Bengo", "Benguela", "Bié", "Cabinda", "Cuando Cubango", 
+            "Cuanza Norte", "Cuanza Sul", "Cunene", "Huambo", "Huíla", 
+            "Icolo e Bengo", "Luanda", "Lunda Norte", "Lunda Sul", "Malanje", 
+            "Moxico", "Moxico Leste", "Namibe", "Uíge", "Zaire"
+        ];
+
+        const INITIAL_PROFESSORS = [
+            {
+                id: "prof-1",
+                nome: "Mário dos Santos",
+                iniciais: "MS",
+                corAvatar: "bg-blue-900 text-amber-400",
+                disciplinas: ["Matemática", "Física"],
+                niveis: ["I Ciclo do Ensino Secundário (7.ª–9.ª)", "II Ciclo do Ensino Secundário (10.ª–12.ª/13.ª, Técnico-Profissional)"],
+                provincia: "Luanda",
+                acesso: "voluntario",
+                apresentacao: "Engenheiro Eletrotécnico apaixonado por ensino. Dou explicações gratuitas aos sábados para preparar jovens para exames.",
+                disponibilidade: { dias: ["Sábado", "Domingo"], periodos: ["Manhã", "Tarde"] },
+                online: true,
+                verificado: true
+            },
+            {
+                id: "prof-2",
+                nome: "Doutora Teresa Kaluanda",
+                iniciais: "TK",
+                corAvatar: "bg-emerald-800 text-white",
+                disciplinas: ["Língua Portuguesa", "História"],
+                niveis: ["Ensino Primário (1.ª–6.ª classe)", "I Ciclo do Ensino Secundário (7.ª–9.ª)"],
+                provincia: "Benguela",
+                acesso: "acessivel",
+                precoKz: 5000,
+                apresentacao: "Professora do II Ciclo com 8 anos de experiência em expressão escrita e análise literária.",
+                disponibilidade: { dias: ["Segunda", "Quarta", "Sexta"], periodos: ["Tarde", "Noite"] },
+                online: true,
+                verificado: true
+            },
+            {
+                id: "prof-3",
+                nome: "Cláudio Manuel Pinto",
+                iniciais: "CP",
+                corAvatar: "bg-orange-800 text-white",
+                disciplinas: ["Química", "Biologia"],
+                niveis: ["II Ciclo do Ensino Secundário (10.ª–12.ª/13.ª, Técnico-Profissional)"],
+                provincia: "Huíla",
+                acesso: "voluntario",
+                apresentacao: "Estudante avançado de Medicina na UNILUÍLA. Foco em preparar alunos para o acesso universitário nas ciências da saúde.",
+                disponibilidade: { dias: ["Terça", "Quinta"], periodos: ["Noite"] },
+                online: false,
+                verificado: true
+            },
+            {
+                id: "prof-4",
+                nome: "Ana Paula Guedes",
+                iniciais: "AG",
+                corAvatar: "bg-indigo-900 text-amber-300",
+                disciplinas: ["Inglês", "Informática"],
+                niveis: ["Ensino Primário (1.ª–6.ª classe)", "I Ciclo do Ensino Secundário (7.ª–9.ª)", "II Ciclo do Ensino Secundário (10.ª–12.ª/13.ª, Técnico-Profissional)"],
+                provincia: "Luanda",
+                acesso: "pago",
+                precoKz: 15000,
+                apresentacao: "Especialista em literacia digital e inglês conversacional. Metodologia moderna adaptada ao mercado angolano.",
+                disponibilidade: { dias: ["Segunda", "Terça", "Quinta", "Sexta"], periodos: ["Manhã", "Tarde"] },
+                online: true,
+                verificado: true
+            },
+            {
+                id: "prof-5",
+                nome: "Emanuel Tchissingui",
+                iniciais: "ET",
+                corAvatar: "bg-slate-800 text-teal-400",
+                disciplinas: ["Geografia", "Filosofia"],
+                niveis: ["I Ciclo do Ensino Secundário (7.ª–9.ª)", "II Ciclo do Ensino Secundário (10.ª–12.ª/13.ª, Técnico-Profissional)"],
+                provincia: "Huambo",
+                acesso: "acessivel",
+                precoKz: 4000,
+                apresentacao: "Licenciado em Ciências Sociais. Aulas dinâmicas com foco no pensamento crítico e geopolítica africana e mundial.",
+                disponibilidade: { dias: ["Quarta", "Sexta", "Sábado"], periodos: ["Manhã"] },
+                online: true,
+                verificado: false
+            },
+            {
+                id: "prof-6",
+                nome: "Rosa Ndalama",
+                iniciais: "RN",
+                corAvatar: "bg-rose-900 text-white",
+                disciplinas: ["Matemática"],
+                niveis: ["Ensino Primário (1.ª–6.ª classe)", "I Ciclo do Ensino Secundário (7.ª–9.ª)"],
+                provincia: "Namibe",
+                acesso: "voluntario",
+                apresentacao: "Apoio escolar gratuito para crianças e adolescentes em situação de vulnerabilidade em Bairro 5 de Abril e arredores.",
+                disponibilidade: { dias: ["Segunda", "Terça", "Quarta", "Quinta"], periodos: ["Tarde"] },
+                online: false,
+                verificado: true
+            }
+        ];
+
+        const StorageService = {
+            get(key, fallback) {
+                try {
+                    const item = localStorage.getItem(`apoioja_${key}`);
+                    return item ? JSON.parse(item) : fallback;
+                } catch (e) {
+                    return fallback;
+                }
+            },
+            set(key, value) {
+                try {
+                    localStorage.setItem(`apoioja_${key}`, JSON.stringify(value));
+                } catch (e) {}
+            },
+            initSeed() {
+                if (!localStorage.getItem("apoioja_teachers")) {
+                    localStorage.setItem("apoioja_teachers", JSON.stringify(INITIAL_PROFESSORS));
+                }
+                if (!localStorage.getItem("apoioja_requests")) {
+                    localStorage.setItem("apoioja_requests", JSON.stringify([
+                        {
+                            id: "req-1",
+                            professorId: "prof-1",
+                            professorNome: "Mário dos Santos",
+                            alunoNome: "Estudante Demo",
+                            disciplina: "Matemática",
+                            nivel: "I Ciclo do Ensino Secundário (7.ª–9.ª)",
+                            duvida: "Preciso de ajuda com equações do 2º grau e raízes quadradas para o teste trimestral.",
+                            modalidade: "Chat online",
+                            estado: "Aceite",
+                            data: new Date(Date.now() - 3600000 * 2).toISOString()
+                        }
+                    ]));
+                }
+                if (!localStorage.getItem("apoioja_messages")) {
+                    localStorage.setItem("apoioja_messages", JSON.stringify({
+                        "req-1": [
+                            { id: "m1", remetente: "aluno", texto: "Olá Professor Mário, tenho uma dúvida em equações.", hora: "10:15" },
+                            { id: "m2", remetente: "professor", texto: "Olá! Com certeza, envia o exercício específico para começarmos.", hora: "10:17" }
+                        ]
+                    }));
+                }
+                if (!localStorage.getItem("apoioja_favorites")) {
+                    localStorage.setItem("apoioja_favorites", JSON.stringify(["prof-1", "prof-4"]));
+                }
+            }
+        };
+
+        StorageService.initSeed();
+
+        function App() {
+            // Estado do Welcome Modal (Tela de Boas-Vindas antes de entrar)
+            const [showWelcome, setShowWelcome] = useState(true);
+            const [theme, setTheme] = useState('light'); // 'light' | 'dark' | 'midnight' | 'sunset'
+
+            const [viewMode, setViewMode] = useState("aluno");
+            const [currentPage, setCurrentPage] = useState("home");
+            const [selectedProfId, setSelectedProfId] = useState(null);
+            const [selectedRequestId, setSelectedRequestId] = useState(null);
+            const [searchQueryState, setSearchQueryState] = useState({ disciplina: "", provincia: "", nivel: "", acesso: "", texto: "" });
+            const [toast, setToast] = useState(null);
+
+            const showToast = (msg, type = "success") => {
+                setToast({ msg, type });
+                setTimeout(() => setToast(null), 3500);
+            };
+
+            const resetData = () => {
+                if (confirm("Tem certeza que deseja repor todos os dados iniciais de demonstração?")) {
+                    localStorage.clear();
+                    StorageService.initSeed();
+                    window.location.reload();
+                }
+            };
+
+            const navigate = (page, param = null) => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (page === 'perfil') setSelectedProfId(param);
+                if (page === 'chat') setSelectedRequestId(param);
+                setCurrentPage(page);
+            };
+
+            useEffect(() => {
+                if (window.lucide) {
+                    setTimeout(() => window.lucide.createIcons(), 50);
+                }
+            }, [currentPage, viewMode, showWelcome, theme]);
+
+            // Classes dinâmicas baseadas no tema escolhido
+            const getThemeClasses = () => {
+                if (theme === 'dark') return 'bg-slate-950 text-slate-100';
+                if (theme === 'midnight') return 'bg-indigo-950 text-indigo-50';
+                if (theme === 'sunset') return 'bg-orange-950 text-orange-50';
+                return 'bg-[#F8FAFC] text-[#0B2545]';
+            };
+
+            const getCardBg = () => {
+                if (theme === 'dark') return 'bg-slate-900 border-slate-800 text-slate-100';
+                if (theme === 'midnight') return 'bg-indigo-900/80 border-indigo-800 text-indigo-50';
+                if (theme === 'sunset') return 'bg-orange-900/80 border-orange-800 text-orange-50';
+                return 'bg-white border-slate-200 text-[#0B2545]';
+            };
+
+            return (
+                <div className={`min-h-screen flex flex-col font-sans transition-all duration-300 ${getThemeClasses()}`}>
+                    
+                    {/* TELA DE BOAS-VINDAS (WELCOME MODAL) */}
+                    {showWelcome && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fadeIn">
+                            <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-6">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg">
+                                    AJ
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl font-extrabold tracking-tight">Bem-vindo ao <span className="text-accent">Apoio Já</span> 🇦🇴</h2>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                        A plataforma líder em Angola que liga estudantes a explicadores qualificados. Esclareça dúvidas, encontre voluntários e acelere o seu aprendizado.
+                                    </p>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs text-left space-y-2">
+                                    <p className="font-bold flex items-center gap-1.5 text-accent">
+                                        <i data-lucide="sparkles" className="w-4 h-4"></i> Destaques do protótipo:
+                                    </p>
+                                    <ul className="space-y-1 text-slate-600 dark:text-slate-300">
+                                        <li>• Cobertura em todas as 21 províncias de Angola</li>
+                                        <li>• Explicadores voluntários (gratuitos) e acessíveis</li>
+                                        <li>• Alterne o tema de fundo e perspetiva livremente</li>
+                                    </ul>
+                                </div>
+                                <button 
+                                    onClick={() => setShowWelcome(false)}
+                                    className="w-full bg-accent hover:bg-accentHover text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg transition text-sm flex items-center justify-center gap-2"
+                                >
+                                    <span>Entrar na Plataforma</span>
+                                    <i data-lucide="arrow-right" className="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* BARRA SUPERIOR DE CONTROLOS & TEMA */}
+                    <header className="sticky top-0 z-40 bg-primary text-white border-b border-blue-900 shadow-lg">
+                        <div className="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+                            <div className="flex items-center gap-2">
+                                <span className="flex h-2.5 w-2.5 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                </span>
+                                <span className="font-medium text-slate-200">Apoio Já • Currículo de Angola 🇦🇴</span>
+                            </div>
+                            
+                            {/* SELETOR DE FUNDO / TEMA (ESTILO CODE FAST) */}
+                            <div className="flex items-center gap-2 bg-blue-950 p-1.5 rounded-xl border border-blue-800">
+                                <span className="text-[11px] text-slate-300 px-1 hidden sm:inline">Fundo:</span>
+                                <button 
+                                    onClick={() => setTheme('light')}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${theme === 'light' ? 'bg-white text-primary shadow' : 'text-slate-300 hover:text-white'}`}
+                                    title="Modo Claro"
+                                >
+                                    ☀️ Claro
+                                </button>
+                                <button 
+                                    onClick={() => setTheme('dark')}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${theme === 'dark' ? 'bg-slate-800 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                    title="Modo Escuro"
+                                >
+                                    🌙 Escuro
+                                </button>
+                                <button 
+                                    onClick={() => setTheme('midnight')}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${theme === 'midnight' ? 'bg-indigo-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                    title="Modo Meia-Noite"
+                                >
+                                    🌌 Midnight
+                                </button>
+                                <button 
+                                    onClick={() => setTheme('sunset')}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${theme === 'sunset' ? 'bg-orange-700 text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                    title="Modo Sunset"
+                                >
+                                    🌇 Sunset
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-950 p-1 rounded-lg flex items-center border border-blue-800">
+                                    <button 
+                                        onClick={() => setViewMode("aluno")}
+                                        className={`px-2.5 py-1 rounded-md text-xs font-semibold transition ${viewMode === 'aluno' ? 'bg-accent text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                    >
+                                        👤 Aluno
+                                    </button>
+                                    <button 
+                                        onClick={() => setViewMode("professor")}
+                                        className={`px-2.5 py-1 rounded-md text-xs font-semibold transition ${viewMode === 'professor' ? 'bg-accent text-white shadow' : 'text-slate-300 hover:text-white'}`}
+                                    >
+                                        👨‍🏫 Professor
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* NAVBAR PRINCIPAL */}
+                        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-primary dark:text-white sticky top-[37px] z-30 transition-all">
+                            <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between">
+                                <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('home')}>
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-xl shadow-md">
+                                        AJ
+                                    </div>
+                                    <div>
+                                        <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-1">
+                                            <span>Apoio</span><span className="text-accent">Já</span>
+                                            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold ml-1">AO</span>
+                                        </h1>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 -mt-1 font-medium">Plataforma de Explicações Escolares</p>
+                                    </div>
+                                </div>
+
+                                <nav className="hidden md:flex items-center gap-6 font-medium text-sm">
+                                    <button onClick={() => navigate('home')} className={`hover:text-accent transition ${currentPage === 'home' ? 'text-accent font-bold' : 'text-slate-600 dark:text-slate-300'}`}>Início</button>
+                                    <button onClick={() => navigate('pesquisa')} className={`hover:text-accent transition ${currentPage === 'pesquisa' ? 'text-accent font-bold' : 'text-slate-600 dark:text-slate-300'}`}>Encontrar Explicadores</button>
+                                    <button onClick={() => navigate('recursos')} className={`hover:text-accent transition ${currentPage === 'recursos' ? 'text-accent font-bold' : 'text-slate-600 dark:text-slate-300'}`}>Recursos de Estudo</button>
+                                    <button onClick={() => navigate('seguranca')} className={`hover:text-accent transition ${currentPage === 'seguranca' ? 'text-accent font-bold' : 'text-slate-600 dark:text-slate-300'}`}>Segurança & Regras</button>
+                                </nav>
+
+                                <div className="flex items-center gap-3">
+                                    {viewMode === 'aluno' ? (
+                                        <button 
+                                            onClick={() => navigate('pedidos-aluno')}
+                                            className="bg-primary text-white hover:bg-secondary px-4 py-2 rounded-xl text-sm font-semibold shadow transition flex items-center gap-2"
+                                        >
+                                            <i data-lucide="user" className="w-4 h-4"></i>
+                                            <span>Painel do Aluno</span>
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => navigate('painel-professor')}
+                                            className="bg-accent hover:bg-accentHover text-white px-4 py-2 rounded-xl text-sm font-semibold shadow transition flex items-center gap-2"
+                                        >
+                                            <i data-lucide="briefcase" className="w-4 h-4"></i>
+                                            <span>Painel do Professor</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {toast && (
+                        <div className="fixed bottom-6 right-6 z-50 animate-bounce duration-300">
+                            <div className={`px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-white font-medium ${toast.type === 'error' ? 'bg-rose-600' : 'bg-primary border border-slate-700'}`}>
+                                <i data-lucide={toast.type === 'error' ? 'alert-circle' : 'check-circle'} className="w-5 h-5 text-accent"></i>
+                                <span>{toast.msg}</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <main className="flex-1">
+                        {currentPage === 'home' && <HomePage navigate={navigate} setSearchQueryState={setSearchQueryState} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'pesquisa' && <SearchPage navigate={navigate} initialQuery={searchQueryState} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'perfil' && <ProfilePage profId={selectedProfId} navigate={navigate} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'pedir' && <RequestPage profId={selectedProfId} navigate={navigate} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'pedidos-aluno' && <StudentDashboard navigate={navigate} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'painel-professor' && <TeacherDashboard navigate={navigate} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'chat' && <ChatPage requestId={selectedRequestId} navigate={navigate} showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'recursos' && <ResourcesPage showToast={showToast} getCardBg={getCardBg} />}
+                        {currentPage === 'seguranca' && <SecurityPage getCardBg={getCardBg} />}
+                    </main>
+
+                    <footer className="bg-primary text-slate-300 pt-16 pb-12 border-t border-blue-950 mt-16">
+                        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold">AJ</div>
+                                    <span className="text-white font-bold text-lg">Apoio Já 🇦🇴</span>
+                                </div>
+                                <p className="text-xs text-slate-400 leading-relaxed">
+                                    Plataforma pioneira dedicada a democratizar o acesso ao reforço escolar e esclarecimento de dúvidas para estudantes em todas as 21 províncias de Angola.
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-semibold text-sm mb-4">Níveis de Ensino</h4>
+                                <ul className="space-y-2 text-xs text-slate-400">
+                                    <li>Ensino Primário (1.ª–6.ª classe)</li>
+                                    <li>I Ciclo do Ensino Secundário (7.ª–9.ª)</li>
+                                    <li>II Ciclo & Técnico-Profissional</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-semibold text-sm mb-4">Províncias em Destaque</h4>
+                                <ul className="space-y-2 text-xs text-slate-400">
+                                    <li>Luanda • Benguela • Huíla</li>
+                                    <li>Huambo • Cabinda • Namibe</li>
+                                    <li>+ 15 Províncias de Angola</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-semibold text-sm mb-4">Controlo de Protótipo</h4>
+                                <p className="text-xs text-slate-400 mb-4">Os dados são salvos localmente no seu navegador.</p>
+                                <button 
+                                    onClick={resetData}
+                                    className="w-full bg-blue-900 hover:bg-blue-800 text-amber-300 border border-blue-800 text-xs font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2"
+                                >
+                                    <i data-lucide="rotate-ccw" className="w-3.5 h-3.5"></i>
+                                    <span>Repor Dados de Demonstração</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="max-w-7xl mx-auto px-4 pt-8 border-t border-blue-950 text-center text-xs text-slate-500">
+                            © 2026 Apoio Já • Desenvolvido com excelência para estudantes e professores angolanos.
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        function HomePage({ navigate, setSearchQueryState, showToast, getCardBg }) {
+            const [localSearch, setLocalSearch] = useState({ disciplina: "", provincia: "", acesso: "" });
+            const teachers = StorageService.get("teachers", INITIAL_PROFESSORS);
+
+            const handleSearchSubmit = (e) => {
+                e.preventDefault();
+                setSearchQueryState(localSearch);
+                navigate('pesquisa');
+            };
+
+            return (
+                <div className="space-y-16 pb-16">
+                    <section className="relative pt-12 pb-20 hero-glow overflow-hidden">
+                        <div className="max-w-7xl mx-auto px-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                <div className="lg:col-span-7 space-y-6">
+                                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold tracking-wide">
+                                        <i data-lucide="sparkles" className="w-3.5 h-3.5 text-accent"></i>
+                                        <span>Educação sem barreiras em Angola</span>
+                                    </div>
+                                    <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
+                                        Conecte-se com explicadores <span className="text-accent underline decoration-amber-300 decoration-wavy decoration-1">qualificados</span>.
+                                    </h2>
+                                    <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg max-w-xl leading-relaxed">
+                                        Esclareça dúvidas escolares, prepare-se para exames e encontre professores voluntários ou acessíveis em qualquer ponto de Angola.
+                                    </p>
+
+                                    <form onSubmit={handleSearchSubmit} className={`p-3 rounded-2xl shadow-xl border grid grid-cols-1 sm:grid-cols-3 gap-3 ${getCardBg()}`}>
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Disciplina</label>
+                                            <select 
+                                                value={localSearch.disciplina} 
+                                                onChange={(e) => setLocalSearch({...localSearch, disciplina: e.target.value})}
+                                                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-accent"
+                                            >
+                                                <option value="">Todas as Disciplinas</option>
+                                                {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Província</label>
+                                            <select 
+                                                value={localSearch.provincia} 
+                                                onChange={(e) => setLocalSearch({...localSearch, provincia: e.target.value})}
+                                                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-accent"
+                                            >
+                                                <option value="">Todas as Províncias</option>
+                                                {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button type="submit" className="w-full bg-accent hover:bg-accentHover text-white font-bold py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md">
+                                                <i data-lucide="search" className="w-4 h-4"></i>
+                                                <span>Pesquisar</span>
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <div className="flex items-center gap-6 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                        <div className="flex items-center gap-1.5">
+                                            <i data-lucide="check-circle-2" className="w-4 h-4 text-emerald-600"></i>
+                                            <span>100% Gratuito para Voluntários</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <i data-lucide="shield-check" className="w-4 h-4 text-blue-600"></i>
+                                            <span>Professores Verificados</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-5">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-primary text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between space-y-8">
+                                            <div className="w-12 h-12 rounded-2xl bg-accent/20 flex items-center justify-center text-accent">
+                                                <i data-lucide="heart-handshake" className="w-6 h-6"></i>
+                                            </div>
+                                            <div>
+                                                <span className="text-3xl font-extrabold text-amber-400">Voluntariado</span>
+                                                <p className="text-xs text-slate-300 mt-1">Apoio escolar solidário para alunos sem recursos financeiros.</p>
+                                            </div>
+                                        </div>
+                                        <div className={`p-6 rounded-3xl shadow-xl border flex flex-col justify-between space-y-8 mt-6 ${getCardBg()}`}>
+                                            <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-slate-800 flex items-center justify-center text-primary dark:text-accent">
+                                                <i data-lucide="book-open" className="w-6 h-6"></i>
+                                            </div>
+                                            <div>
+                                                <span className="text-3xl font-extrabold">21 Províncias</span>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Cobertura em todo o território nacional angolano.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="max-w-7xl mx-auto px-4">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold">Explore por Disciplina Principal</h3>
+                            <button onClick={() => navigate('pesquisa')} className="text-xs font-bold text-accent hover:underline flex items-center gap-1">
+                                Ver todos os explicadores <i data-lucide="arrow-right" className="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            {DISCIPLINAS.slice(0, 10).map((disc) => (
+                                <div 
+                                    key={disc}
+                                    onClick={() => { setSearchQueryState({ disciplina: disc, provincia: "", nivel: "", acesso: "", texto: "" }); navigate('pesquisa'); }}
+                                    className={`p-4 rounded-2xl shadow-sm hover:shadow-md cursor-pointer transition flex flex-col items-center text-center group border ${getCardBg()}`}
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:bg-amber-50 group-hover:text-accent flex items-center justify-center mb-3 transition">
+                                        <i data-lucide="book" className="w-5 h-5"></i>
+                                    </div>
+                                    <span className="text-xs font-bold group-hover:text-accent transition">{disc}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="max-w-7xl mx-auto px-4">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-xl font-bold">Explicadores em Destaque</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Professores disponíveis para apoio imediato</p>
+                            </div>
+                            <button onClick={() => navigate('pesquisa')} className="bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+                                Ver Lista Completa
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {teachers.slice(0, 3).map((prof) => (
+                                <div key={prof.id} className={`rounded-3xl p-6 shadow-sm border transition flex flex-col justify-between ${getCardBg()}`}>
+                                    <div>
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-12 h-12 rounded-2xl ${prof.corAvatar} flex items-center justify-center font-bold text-lg shadow-sm`}>
+                                                    {prof.iniciais}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-base flex items-center gap-1.5">
+                                                        {prof.nome}
+                                                        {prof.verificado && <i data-lucide="badge-check" className="w-4 h-4 text-blue-600"></i>}
+                                                    </h4>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                                        <i data-lucide="map-pin" className="w-3 h-3"></i> {prof.provincia}, Angola
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {prof.online && (
+                                                <span className="flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 font-semibold px-2 py-1 rounded-full border border-emerald-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mb-4 leading-relaxed">{prof.apresentacao}</p>
+
+                                        <div className="flex flex-wrap gap-1.5 mb-6">
+                                            {prof.disciplinas.map(d => (
+                                                <span key={d} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg font-semibold">{d}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                        <div>
+                                            {prof.acesso === 'voluntario' ? (
+                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Voluntário</span>
+                                            ) : (
+                                                <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">{prof.precoKz?.toLocaleString()} Kz</span>
+                                            )}
+                                        </div>
+                                        <button 
+                                            onClick={() => navigate('perfil', prof.id)}
+                                            className="bg-primary text-white hover:bg-secondary text-xs font-bold px-4 py-2 rounded-xl transition"
+                                        >
+                                            Ver Perfil
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+            );
+        }
+
+        function SearchPage({ navigate, initialQuery, showToast, getCardBg }) {
+            const [teachers] = useState(() => StorageService.get("teachers", INITIAL_PROFESSORS));
+            const [filters, setFilters] = useState(initialQuery || { disciplina: "", provincia: "", nivel: "", acesso: "", texto: "" });
+            const [favorites, setFavorites] = useState(() => StorageService.get("favorites", []));
+
+            const toggleFavorite = (id) => {
+                let updated;
+                if (favorites.includes(id)) {
+                    updated = favorites.filter(f => f !== id);
+                    showToast("Removido dos favoritos", "error");
+                } else {
+                    updated = [...favorites, id];
+                    showToast("Adicionado aos favoritos!");
+                }
+                setFavorites(updated);
+                StorageService.set("favorites", updated);
+            };
+
+            const filteredTeachers = teachers.filter(t => {
+                if (filters.disciplina && !t.disciplinas.includes(filters.disciplina)) return false;
+                if (filters.provincia && t.provincia !== filters.provincia) return false;
+                if (filters.acesso && t.acesso !== filters.acesso) return false;
+                if (filters.texto) {
+                    const txt = filters.texto.toLowerCase();
+                    if (!t.nome.toLowerCase().includes(txt) && !t.disciplinas.some(d => d.toLowerCase().includes(txt))) return false;
+                }
+                return true;
+            });
+
+            return (
+                <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+                    <div>
+                        <h2 className="text-3xl font-extrabold">Encontrar Explicador</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">Filtre por disciplina, província ou modelo de acesso.</p>
+                    </div>
+
+                    <div className={`p-6 rounded-3xl shadow-sm border grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 ${getCardBg()}`}>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-400 mb-1">Pesquisa Geral</label>
+                            <input 
+                                type="text" 
+                                placeholder="Nome, disciplina..." 
+                                value={filters.texto}
+                                onChange={e => setFilters({...filters, texto: e.target.value})}
+                                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-accent"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-400 mb-1">Disciplina</label>
+                            <select 
+                                value={filters.disciplina}
+                                onChange={e => setFilters({...filters, disciplina: e.target.value})}
+                                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-accent"
+                            >
+                                <option value="">Todas</option>
+                                {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-400 mb-1">Província</label>
+                            <select 
+                                value={filters.provincia}
+                                onChange={e => setFilters({...filters, provincia: e.target.value})}
+                                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-accent"
+                            >
+                                <option value="">Todas</option>
+                                {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-400 mb-1">Modelo de Acesso</label>
+                            <select 
+                                value={filters.acesso}
+                                onChange={e => setFilters({...filters, acesso: e.target.value})}
+                                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:border-accent"
+                            >
+                                <option value="">Todos</option>
+                                <option value="voluntario">Voluntário (Gratuito)</option>
+                                <option value="acessivel">Preço Acessível</option>
+                                <option value="pago">Pago</option>
+                            </select>
+                        </div>
+                        <div className="flex items-end">
+                            <button 
+                                onClick={() => setFilters({ disciplina: "", provincia: "", nivel: "", acesso: "", texto: "" })}
+                                className="w-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 font-bold py-2 px-4 rounded-xl text-sm transition"
+                            >
+                                Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredTeachers.map((prof) => {
+                            const isFav = favorites.includes(prof.id);
+                            return (
+                                <div key={prof.id} className={`rounded-3xl p-6 shadow-sm border transition flex flex-col justify-between ${getCardBg()}`}>
+                                    <div>
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-12 h-12 rounded-2xl ${prof.corAvatar} flex items-center justify-center font-bold text-lg shadow-sm`}>
+                                                    {prof.iniciais}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-base flex items-center gap-1.5">
+                                                        {prof.nome}
+                                                        {prof.verificado && <i data-lucide="badge-check" className="w-4 h-4 text-blue-600"></i>}
+                                                    </h4>
+                                                    <p className="text-xs text-slate-400 flex items-center gap-1">
+                                                        <i data-lucide="map-pin" className="w-3 h-3"></i> {prof.provincia}, Angola
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => toggleFavorite(prof.id)}
+                                                className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${isFav ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
+                                            >
+                                                <i data-lucide="heart" className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`}></i>
+                                            </button>
+                                        </div>
+
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 mb-4 leading-relaxed">{prof.apresentacao}</p>
+
+                                        <div className="flex flex-wrap gap-1.5 mb-6">
+                                            {prof.disciplinas.map(d => (
+                                                <span key={d} className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg font-semibold">{d}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                        <div>
+                                            {prof.acesso === 'voluntario' ? (
+                                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Voluntário</span>
+                                            ) : (
+                                                <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">{prof.precoKz?.toLocaleString()} Kz</span>
+                                            )}
+                                        </div>
+                                        <button 
+                                            onClick={() => navigate('perfil', prof.id)}
+                                            className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                                        >
+                                            Ver Perfil
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        function ProfilePage({ profId, navigate, showToast, getCardBg }) {
+            const teachers = StorageService.get("teachers", INITIAL_PROFESSORS);
+            const prof = teachers.find(t => t.id === profId) || teachers[0];
+
+            return (
+                <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
+                    <button onClick={() => navigate('pesquisa')} className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-accent mb-2">
+                        <i data-lucide="arrow-left" className="w-4 h-4"></i> Voltar à Pesquisa
+                    </button>
+
+                    <div className={`rounded-3xl p-8 shadow-sm border space-y-8 ${getCardBg()}`}>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-20 h-20 rounded-3xl ${prof.corAvatar} flex items-center justify-center text-2xl font-bold shadow-md`}>
+                                    {prof.iniciais}
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-2xl font-extrabold">{prof.nome}</h2>
+                                        {prof.verificado && <i data-lucide="badge-check" className="w-5 h-5 text-blue-600"></i>}
+                                    </div>
+                                    <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                                        <i data-lucide="map-pin" className="w-3.5 h-3.5"></i> Província de {prof.provincia}, Angola
+                                    </p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => navigate('pedir', prof.id)}
+                                className="bg-accent hover:bg-accentHover text-white font-bold px-6 py-3 rounded-2xl shadow-md transition flex items-center gap-2 text-sm"
+                            >
+                                <i data-lucide="message-square-plus" className="w-4 h-4"></i>
+                                <span>Solicitar Explicação</span>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="md:col-span-2 space-y-6">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Sobre o Explicador</h3>
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">{prof.apresentacao}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Disciplinas</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {prof.disciplinas.map(d => (
+                                            <span key={d} className="bg-primary/10 text-primary dark:text-accent text-xs font-bold px-3 py-1.5 rounded-xl">{d}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 space-y-4">
+                                <h3 className="text-sm font-bold">Modelo de Acesso</h3>
+                                {prof.acesso === 'voluntario' ? (
+                                    <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                                        🎁 Voluntário (Gratuito)
+                                    </div>
+                                ) : (
+                                    <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
+                                        🏷️ {prof.precoKz?.toLocaleString()} Kz
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function RequestPage({ profId, navigate, showToast, getCardBg }) {
+            const teachers = StorageService.get("teachers", INITIAL_PROFESSORS);
+            const prof = teachers.find(t => t.id === profId) || teachers[0];
+            const [duvida, setDuvida] = useState("");
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!duvida.trim()) return showToast("Descreva a sua dúvida.", "error");
+
+                const newReq = {
+                    id: `req-${Date.now()}`,
+                    professorId: prof.id,
+                    professorNome: prof.nome,
+                    alunoNome: "Estudante Demo",
+                    disciplina: prof.disciplinas[0],
+                    nivel: NIVEIS_ENSINO[1],
+                    duvida,
+                    estado: "Pendente",
+                    data: new Date().toISOString()
+                };
+
+                const requests = StorageService.get("requests", []);
+                StorageService.set("requests", [newReq, ...requests]);
+                showToast("Pedido enviado com sucesso!");
+                navigate('pedidos-aluno');
+            };
+
+            return (
+                <div className="max-w-xl mx-auto px-4 py-10 space-y-8">
+                    <div className={`rounded-3xl p-8 shadow-sm border space-y-6 ${getCardBg()}`}>
+                        <h2 className="text-2xl font-extrabold">Solicitar Ajuda a {prof.nome}</h2>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 mb-1">Descreva a sua dúvida</label>
+                                <textarea 
+                                    rows="4" 
+                                    value={duvida} 
+                                    onChange={e => setDuvida(e.target.value)}
+                                    placeholder="Ex: Preciso de ajuda com equações..."
+                                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-sm focus:outline-none focus:border-accent"
+                                ></textarea>
+                            </div>
+                            <button type="submit" className="w-full bg-accent hover:bg-accentHover text-white font-bold py-3.5 rounded-2xl shadow">
+                                Submeter Pedido
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function StudentDashboard({ navigate, showToast, getCardBg }) {
+            const requests = StorageService.get("requests", []);
+            return (
+                <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+                    <h2 className="text-3xl font-extrabold">Painel do Aluno</h2>
+                    <div className="space-y-4">
+                        {requests.map(req => (
+                            <div key={req.id} className={`p-6 rounded-3xl border flex items-center justify-between ${getCardBg()}`}>
+                                <div>
+                                    <h4 className="font-bold text-base">{req.professorNome}</h4>
+                                    <p className="text-xs text-slate-400">{req.disciplina} • <span className="text-accent font-bold">{req.estado}</span></p>
+                                    <p className="text-xs italic mt-1">"{req.duvida}"</p>
+                                </div>
+                                {req.estado === 'Aceite' && (
+                                    <button onClick={() => navigate('chat', req.id)} className="bg-accent text-white px-4 py-2 rounded-xl text-xs font-bold">
+                                        Abrir Chat
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function TeacherDashboard({ navigate, showToast, getCardBg }) {
+            const [requests, setRequests] = useState(() => StorageService.get("requests", []));
+            const updateStatus = (id, estado) => {
+                const updated = requests.map(r => r.id === id ? {...r, estado} : r);
+                setRequests(updated);
+                StorageService.set("requests", updated);
+                showToast(`Pedido ${estado.toLowerCase()} com sucesso!`);
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+                    <h2 className="text-3xl font-extrabold">Painel do Professor Demo</h2>
+                    <div className="space-y-4">
+                        {requests.map(req => (
+                            <div key={req.id} className={`p-6 rounded-3xl border flex items-center justify-between ${getCardBg()}`}>
+                                <div>
+                                    <h4 className="font-bold text-base">Aluno: {req.alunoNome}</h4>
+                                    <p className="text-xs text-slate-400">{req.disciplina} • <span className="text-accent font-bold">{req.estado}</span></p>
+                                    <p className="text-xs italic mt-1">"{req.duvida}"</p>
+                                </div>
+                                {req.estado === 'Pendente' && (
+                                    <div className="flex gap-2">
+                                        <button onClick={() => updateStatus(req.id, 'Aceite')} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Aceitar</button>
+                                        <button onClick={() => updateStatus(req.id, 'Recusado')} className="bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Recusar</button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function ChatPage({ requestId, navigate, showToast, getCardBg }) {
+            const allMsg = StorageService.get("messages", {});
+            const [msgList, setMsgList] = useState(allMsg[requestId] || [{ id: "1", remetente: "aluno", texto: "Olá professor!", hora: "10:00" }]);
+            const [input, setInput] = useState("");
+
+            const handleSend = (e) => {
+                e.preventDefault();
+                if (!input.trim()) return;
+                const updated = [...msgList, { id: Date.now(), remetente: "aluno", texto: input, hora: "10:02" }];
+                setMsgList(updated);
+                StorageService.set("messages", { ...allMsg, [requestId]: updated });
+                setInput("");
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto px-4 py-10">
+                    <div className={`rounded-3xl border flex flex-col h-[500px] ${getCardBg()}`}>
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-bold">Chat com Explicador</div>
+                        <div className="flex-1 p-6 overflow-y-auto space-y-3">
+                            {msgList.map(m => (
+                                <div key={m.id} className={`flex ${m.remetente === 'aluno' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`p-3 rounded-2xl text-xs max-w-xs ${m.remetente === 'aluno' ? 'bg-primary text-white' : 'bg-slate-200 dark:bg-slate-800'}`}>
+                                        {m.texto}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <form onSubmit={handleSend} className="p-4 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+                            <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder="Escreva..." className="flex-1 bg-slate-100 dark:bg-slate-800 border rounded-xl px-4 py-2 text-xs" />
+                            <button type="submit" className="bg-accent text-white px-4 py-2 rounded-xl text-xs font-bold">Enviar</button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function ResourcesPage({ showToast, getCardBg }) {
+            return (
+                <div className="max-w-7xl mx-auto px-4 py-10 space-y-6">
+                    <h2 className="text-3xl font-extrabold">Recursos de Estudo</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className={`p-6 rounded-3xl border flex justify-between items-center ${getCardBg()}`}>
+                            <div>
+                                <h4 className="font-bold">Fórmulas de Matemática (9.ª Classe)</h4>
+                                <p className="text-xs text-slate-400">PDF Educativo Alinhado</p>
+                            </div>
+                            <button onClick={() => showToast("Descarregado com sucesso!")} className="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold">Baixar</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SecurityPage({ getCardBg }) {
+            return (
+                <div className="max-w-2xl mx-auto px-4 py-10">
+                    <div className={`p-8 rounded-3xl border space-y-4 ${getCardBg()}`}>
+                        <h2 className="text-2xl font-extrabold text-accent">Regras de Segurança</h2>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            Apoio Já promove estritamente a segurança e o respeito mútuo. Aulas presenciais devem ser validadas por um encarregado de educação.
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
