@@ -43,9 +43,7 @@
         .dark .glass-card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(51, 65, 85, 0.8); }
         .midnight .glass-card { background: rgba(30, 27, 75, 0.9); border: 1px solid rgba(79, 70, 229, 0.3); }
         .sunset .glass-card { background: rgba(67, 20, 7, 0.9); border: 1px solid rgba(234, 88, 12, 0.3); }
-        
         .hero-glow { background: radial-gradient(circle at 50% 20%, rgba(242, 140, 40, 0.15) 0%, rgba(11, 37, 69, 0.04) 60%, transparent 100%); }
-        .dark .hero-glow { background: radial-gradient(circle at 50% 20%, rgba(242, 140, 40, 0.1) 0%, rgba(15, 23, 42, 0.05) 60%, transparent 100%); }
     </style>
 </head>
 <body class="antialiased transition-colors duration-300">
@@ -213,7 +211,8 @@
         StorageService.initSeed();
 
         function App() {
-            const [showWelcome, setShowWelcome] = useState(true);
+            // Gestão de Sessão / Utilizador atual
+            const [currentUser, setCurrentUser] = useState(() => StorageService.get("current_user", null));
             const [theme, setTheme] = useState('light'); // 'light' | 'dark' | 'midnight' | 'sunset'
             const [showThemeMenu, setShowThemeMenu] = useState(false);
             const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -228,6 +227,12 @@
             const showToast = (msg, type = "success") => {
                 setToast({ msg, type });
                 setTimeout(() => setToast(null), 3500);
+            };
+
+            const logout = () => {
+                StorageService.set("current_user", null);
+                setCurrentUser(null);
+                showToast("Sessão terminada com sucesso.");
             };
 
             const resetData = () => {
@@ -250,7 +255,7 @@
                 if (window.lucide) {
                     setTimeout(() => window.lucide.createIcons(), 50);
                 }
-            }, [currentPage, viewMode, showWelcome, theme, mobileMenuOpen]);
+            }, [currentPage, viewMode, currentUser, theme, mobileMenuOpen]);
 
             const getThemeClasses = () => {
                 if (theme === 'dark') return 'bg-slate-950 text-slate-100 dark';
@@ -266,33 +271,14 @@
                 return 'bg-white border-slate-200/80 text-[#0B2545] shadow-sm';
             };
 
+            // SE O UTILIZADOR NÃO ESTIVER AUTENTICADO, EXIBE O ECRÃ DE CADASTRO/LOGIN ANTES DE ENTRAR
+            if (!currentUser) {
+                return <AuthScreen setCurrentUser={setCurrentUser} showToast={showToast} theme={theme} setTheme={setTheme} getCardBg={getCardBg} />;
+            }
+
             return (
                 <div className={`min-h-screen flex flex-col font-sans transition-all duration-300 ${getThemeClasses()}`}>
                     
-                    {/* TELA DE BOAS-VINDAS */}
-                    {showWelcome && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fadeIn">
-                            <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 max-w-sm sm:max-w-md w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-5">
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-xl mx-auto shadow-lg">
-                                    AJ
-                                </div>
-                                <div className="space-y-1.5">
-                                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Bem-vindo ao <span className="text-accent">Apoio Já</span> 🇦🇴</h2>
-                                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                                        Plataforma de reforço escolar e ligação a explicadores para todo o currículo angolano.
-                                    </p>
-                                </div>
-                                <button 
-                                    onClick={() => setShowWelcome(false)}
-                                    className="w-full bg-accent hover:bg-accentHover text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition text-xs sm:text-sm flex items-center justify-center gap-2"
-                                >
-                                    <span>Começar Agora</span>
-                                    <i data-lucide="arrow-right" className="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
                     {/* BARRA SUPERIOR DE CONTROLOS (ESTILO FACEBOOK SUPERIOR) */}
                     <header className="sticky top-0 z-40 bg-primary text-white shadow-md">
                         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2 text-xs">
@@ -301,7 +287,7 @@
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                                 </span>
-                                <span className="font-medium text-slate-200 truncate">Apoio Já • Angola 🇦🇴</span>
+                                <span className="font-medium text-slate-200 truncate">Olá, {currentUser.nome} ({currentUser.tipo}) 🇦🇴</span>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -335,20 +321,12 @@
                                     )}
                                 </div>
 
-                                <div className="bg-blue-950 p-0.5 rounded-xl flex items-center border border-blue-800 text-[11px]">
-                                    <button 
-                                        onClick={() => setViewMode("aluno")}
-                                        className={`px-2.5 py-1 rounded-lg font-semibold transition ${viewMode === 'aluno' ? 'bg-accent text-white shadow' : 'text-slate-300'}`}
-                                    >
-                                        Aluno
-                                    </button>
-                                    <button 
-                                        onClick={() => setViewMode("professor")}
-                                        className={`px-2.5 py-1 rounded-lg font-semibold transition ${viewMode === 'professor' ? 'bg-accent text-white shadow' : 'text-slate-300'}`}
-                                    >
-                                        Prof
-                                    </button>
-                                </div>
+                                <button 
+                                    onClick={logout}
+                                    className="bg-rose-900/60 hover:bg-rose-900 px-3 py-1.5 rounded-xl text-rose-200 font-semibold text-xs transition"
+                                >
+                                    Sair
+                                </button>
                             </div>
                         </div>
 
@@ -376,7 +354,7 @@
                                 </nav>
 
                                 <div className="flex items-center gap-2">
-                                    {viewMode === 'aluno' ? (
+                                    {currentUser.tipo === 'aluno' ? (
                                         <button 
                                             onClick={() => navigate('pedidos-aluno')}
                                             className="bg-primary text-white hover:bg-secondary px-3 py-1.5 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1.5"
@@ -474,6 +452,161 @@
                             © 2026 Apoio Já • Angola. Todos os direitos reservados.
                         </div>
                     </footer>
+                </div>
+            );
+        }
+
+        // --- ECRÃ DE CADASTRO E LOGIN PRÉVIO (GATEWAY) ---
+        function AuthScreen({ setCurrentUser, showToast, theme, setTheme, getCardBg }) {
+            const [isRegister, setIsRegister] = useState(false);
+            const [tipo, setTipo] = useState('aluno'); // 'aluno' | 'professor'
+            const [nome, setNome] = useState('');
+            const [email, setEmail] = useState('');
+            const [provincia, setProvincia] = useState('Luanda');
+
+            const handleAuth = (e) => {
+                e.preventDefault();
+                if (!email.trim() || !nome.trim()) {
+                    showToast("Por favor preencha todos os campos obrigatórios.", "error");
+                    return;
+                }
+
+                const userData = { nome, email, tipo, provincia };
+                StorageService.set("current_user", userData);
+                setCurrentUser(userData);
+                showToast(`Bem-vindo(a), ${nome}! Sessão iniciada.`);
+            };
+
+            const loginDemoAluno = () => {
+                const demo = { nome: "Estudante Demo", email: "aluno@apoioja.ao", tipo: "aluno", provincia: "Luanda" };
+                StorageService.set("current_user", demo);
+                setCurrentUser(demo);
+                showToast("Sessão iniciada como Aluno Demo!");
+            };
+
+            const loginDemoProf = () => {
+                const demo = { nome: "Mário dos Santos", email: "professor@apoioja.ao", tipo: "professor", provincia: "Luanda" };
+                StorageService.set("current_user", demo);
+                setCurrentUser(demo);
+                showToast("Sessão iniciada como Professor Demo!");
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-secondary to-[#071325] p-4 text-slate-900 dark:text-slate-100">
+                    <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6">
+                        <div className="text-center space-y-2">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg">
+                                AJ
+                            </div>
+                            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Apoio <span className="text-accent">Já</span> 🇦🇴</h2>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {isRegister ? "Crie a sua conta para aceder à plataforma" : "Inicie sessão para entrar na plataforma"}
+                            </p>
+                        </div>
+
+                        {/* TABS LOGIN / REGISTO */}
+                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl text-xs font-bold">
+                            <button 
+                                onClick={() => setIsRegister(false)}
+                                className={`flex-1 py-2 rounded-xl transition ${!isRegister ? 'bg-primary text-white shadow' : 'text-slate-500'}`}
+                            >
+                                Iniciar Sessão
+                            </button>
+                            <button 
+                                onClick={() => setIsRegister(true)}
+                                className={`flex-1 py-2 rounded-xl transition ${isRegister ? 'bg-primary text-white shadow' : 'text-slate-500'}`}
+                            >
+                                Criar Conta
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAuth} className="space-y-4 text-xs">
+                            {isRegister && (
+                                <div>
+                                    <label className="block font-bold text-slate-400 mb-1 text-[10px]">Perfil de Acesso</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setTipo('aluno')}
+                                            className={`py-2.5 rounded-xl font-bold border transition ${tipo === 'aluno' ? 'bg-accent text-white border-accent' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}
+                                        >
+                                            👤 Aluno
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setTipo('professor')}
+                                            className={`py-2.5 rounded-xl font-bold border transition ${tipo === 'professor' ? 'bg-accent text-white border-accent' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}
+                                        >
+                                            👨‍🏫 Professor
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block font-bold text-slate-400 mb-1 text-[10px]">Nome Completo</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Ex: Ana Paula"
+                                    value={nome}
+                                    onChange={e => setNome(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-accent"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-bold text-slate-400 mb-1 text-[10px]">Endereço de Email</label>
+                                <input 
+                                    type="email" 
+                                    placeholder="exemplo@gmail.com"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-accent"
+                                    required
+                                />
+                            </div>
+
+                            {isRegister && (
+                                <div>
+                                    <label className="block font-bold text-slate-400 mb-1 text-[10px]">Província em Angola</label>
+                                    <select 
+                                        value={provincia}
+                                        onChange={e => setProvincia(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none focus:border-accent"
+                                    >
+                                        {PROVINCIAS.map(p => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                </div>
+                            )}
+
+                            <button 
+                                type="submit"
+                                className="w-full bg-accent hover:bg-accentHover text-white font-bold py-3.5 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2"
+                            >
+                                <span>{isRegister ? "Concluir Cadastro" : "Entrar na Plataforma"}</span>
+                                <i data-lucide="arrow-right" className="w-3.5 h-3.5"></i>
+                            </button>
+                        </form>
+
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                            <span className="block text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">Acesso Rápido de Demonstração</span>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button 
+                                    onClick={loginDemoAluno}
+                                    className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold py-2 px-3 rounded-xl text-[11px] transition text-primary dark:text-white"
+                                >
+                                    👤 Entrar como Aluno
+                                </button>
+                                <button 
+                                    onClick={loginDemoProf}
+                                    className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold py-2 px-3 rounded-xl text-[11px] transition text-primary dark:text-white"
+                                >
+                                    👨‍🏫 Entrar como Professor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         }
